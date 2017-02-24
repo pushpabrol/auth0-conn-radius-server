@@ -1,0 +1,24 @@
+{
+  "name": "auth0-conn-radius-server",
+  "version": "0.0.1",
+  "description": "A radius server that authenticates against auth0 connection",
+  "main": "auth0-connection-radius-server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pushpabrol/auth0-conn-radius-server.git"
+  },
+  "keywords": [
+    "auth0",
+    "radius",
+    "server"
+  ],
+  "author": "auth0.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/pushpabrol/auth0-conn-radius-server/issues"
+  },
+  "homepage": "https://github.com/pushpabrol/auth0-conn-radius-server#readme"
+}
