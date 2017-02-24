@@ -9,7 +9,7 @@ Radius server using authentication with Auth0 Connection
     Options:
       --domain   [required, auth0 domain]
       --secret   [required, radius secret, not auth0 secret]
-      --client_id [required, auth0 client id]
+      --client_id [required, auth0 client id. This client should have the connection, used below, selected]
       --connection [required, auth0 DB/AD connection name]
       --port     [default: 1812]
       --address  [default: "0.0.0.0"]
