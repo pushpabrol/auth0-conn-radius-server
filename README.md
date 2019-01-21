@@ -15,17 +15,17 @@ Copy client_id, client_secret etc. to command line.
         --client_id <auth0_client_id> --client_secret <auth0_client_secret> 
         --secret <radius_secret>
 
-Options:
-  --help           Show help                                           [boolean]
-  --version        Show version number                                 [boolean]
-  --domain                                                   [string] [required]
-  --secret                                                   [string] [required]
-  --client_id                                                [string] [required]
-  --client_secret                                            [string] [required]
-  --audience                                                 [string] [required]
-  --port                                                         [default: 1812]
-  --address                                        [string] [default: "0.0.0.0"]
-  --connection                                                     [default: ""]
+### Options:
+      --help           Show help                                           [boolean]
+      --version        Show version number                                 [boolean]
+      --domain                                                   [string] [required]
+      --secret                                                   [string] [required]
+      --client_id                                                [string] [required]
+      --client_secret                                            [string] [required]
+      --audience                                                 [string] [required]
+      --port                                                         [default: 1812]
+      --address                                        [string] [default: "0.0.0.0"]
+      --connection                                                     [default: ""]
 
 The connection option can be used to specify a connection to authenticate against. This is highly recommended, otherwise you would have to set a tenant-wide "Default Directory".
 
