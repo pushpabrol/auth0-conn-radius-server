@@ -20,5 +20,11 @@
   "bugs": {
     "url": "https://github.com/pushpabrol/auth0-conn-radius-server/issues"
   },
-  "homepage": "https://github.com/pushpabrol/auth0-conn-radius-server#readme"
+  "homepage": "https://github.com/pushpabrol/auth0-conn-radius-server#readme",
+  "dependencies": {
+    "yargs": "latest",
+    "radius": "latest",
+    "underscore": "latest",
+    "request": "latest"
+  }
 }
