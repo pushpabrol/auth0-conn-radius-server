@@ -1,152 +1,45 @@
-var dgram = require('dgram');
-var _ = require('underscore');
-var radius = require('radius');
-var request = require("request");
-/**
- * Authenticates user log in.
- *
- * `username` - auth0 username
- * `password` - the password for the user
- * `options` - extra options (optional)
- *    string `connection`  - name of the AD/Database Connection. Only works for endpoints that allow active auth
- *    string `domain` - Auth0 Domain,
- *    string client_id - client_id for the application where the Connection is enabled
- * `callback` - callback with signature: callback(err, obj)
- *  object `obj`
- *    string `username` - the username
- *    string `domain` - auth0 domain
- *    boolean `status`  - true if accepted, false otherwise
- */
+var auth0ConnRadiusServer = require('./backend.js');
 
-var authenticate;
-module.exports.authenticate = authenticate = function(username, password, options, callback) {
-  
- //auth0 active connection auth
+var argv = require('yargs')
+  .usage('Usage: $0 --address <address> --port [port] --domain <auth0_domain> --audience <auth0_api_identifier> --connection <auth0_connection_name> --client_id <auth0_client_id> --client_secret <auth0_client_secret> --secret <secret>')
+  .demand(['domain', 'secret','client_id', 'client_secret', 'audience'])
+  .default('port', 1812)
+  .string('address')
+  .default('address', '0.0.0.0')
+  .string('domain')
+  .string('secret')
+  .string('client_id')
+  .string('client_secret')
+  .default('connection', '')
+  .string('audience')
+  .argv;
 
- var url = 'https://' + options.domain + '/oauth/token'
-
-var optionsReq = { method: 'POST',
-  url: url,
-  headers: { 'content-type': 'application/json' },
-  body: 
-   { grant_type: 'http://auth0.com/oauth/grant-type/password-realm',
-     username: username,
-     password: password,
-     client_id: options.client_id,
-     realm: options.connection 
-    },
-  json: true };
-
-request(optionsReq, function (error, response, body) {
-  if (error) {
-  console.log(error);
-  callback(error);
-  }
-  else {
-  if(response.statusCode === 200)
-  {
-    console.log(body);
-     var obj = {
-            username: username,
-            domain: options.domain,
-            status: true,
-          };
-
-          callback(null, obj);
-  }
-  else 
-  {
-    callback(body);
-  }
-    
-  } 
+var server = auth0ConnRadiusServer.createServer({
+  domain: argv.domain,
+  secret: argv.secret,
+  client_id: argv.client_id,
+  client_secret: argv.client_secret,
+  audience: argv.audience,
+  connection: argv.connection
 });
 
+function now() {
+  return new Date().toISOString() + ': ';
 }
 
-/**
- * Creates a datagram socket that handles RADIUS Access-Request messages.
- *
- * object `options`
- *  string `secret`   - the radius secret
- *  string `protocol` - "udp4" (default) or "udp6"
- *
- * The additional events can be emitted by the returned socket object:
- *
- * "radius" - when authentication of a user has completed. The following object
- * will be passed with the event:
- *
- *  object `obj`
- *    string `username` - the username
- *    string `domain`   - the auth0 domain
- *    boolean `status`  - true if accepted, false otherwise
- *
- * "radius-error" - when an error occurs decoding or parsing the RADIUS
- * packet. The following object will be passed with the event:
- *
- *  object `obj`
- *    string `domain`  - the auth0 domain the RADIUS server is authenticating against
- *    string `message` - the error description
- */
+server.on('listening', function () {
+  var address = server.address();
+  console.log(now() + 'Listening ' + address.address + ':' + address.port);
+});
 
-module.exports.createServer = function (options) {
-  // Defaults
-  if (!options) {
-    options = {};
-  }
-  if (!options.protocol) {
-    options.protocol = 'udp4';
-  }
+server.on('radius', function (e) {
+    console.log(e);
+  var type = e.status ? 'success' : 'failure';
+  console.log(now() + 'Authentication ' + type + ': ' + e.username + '@' + e.domain);
+});
 
-  // Create server
-  var server = dgram.createSocket(options.protocol);
+server.on('radius-error', function (err) {
+  console.log(now() + err.message);
+});
 
-  // Register callback
-  server.on('message', function (msg, rinfo) {
-    try {
-      var packet = radius.decode({
-        packet: msg,
-        secret: options.secret
-      });
-    } catch (ex) {
-      server.emit('radius-error', {
-        domain: options.domain,
-        message: ex.toString()
-      });
-      return;
-    }
-
-    if (packet.code != 'Access-Request') {
-      server.emit('radius-error', {
-        domain: options.domain,
-        message: 'Packet code error: not "Access-Request"'
-      });
-      return;
-    }
-
-    var username = packet.attributes['User-Name'];
-    var password = packet.attributes['User-Password'];
-
-    // Reply function
-    authenticate(username, password, options, function (err, obj) {
-      var code = !err && obj.status ? 'Access-Accept' : 'Access-Reject';
-      var response = radius.encode_response({
-        packet: packet,
-        code: code,
-        secret: options.secret
-      });
-      server.send(response, 0, response.length, rinfo.port, rinfo.address, function() {
-        if (err) {
-          obj = {
-            username: username,
-            domain: options.domain,
-            status: false,
-          };
-        }
-        server.emit('radius', obj);
-      });
-    });
-  });
-
-  return server;
-};
+server.bind(argv.port, argv.address);
